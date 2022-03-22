@@ -102,7 +102,7 @@ def parse_site_bandwidth(lines):
         words = lines[i].strip().split(',')
         N.append(words[0])
         C.append(int(words[1]))
-    return N, np.array(C)
+    return len(N), N, np.array(C)
 
 # site_bandwidth = read(site_bandwidth_path)
 # print(parse_site_bandwidth(site_bandwidth))
