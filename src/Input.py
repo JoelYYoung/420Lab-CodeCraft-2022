@@ -1,10 +1,18 @@
+import numpy as np
+
+
+'''
+数据文件的根路径
+'''
+root_path = '../../'
+
 '''
 数据文件路径
 '''
-demand_path = '../../data/demand.csv'
-config_path = '../../data/config.ini'
-qos_path = '../../data/qos.csv'
-site_bandwidth_path = '../../data/site_bandwidth.csv'
+demand_path = root_path + 'data/demand.csv'
+config_path = root_path + 'data/config.ini'
+qos_path = root_path + 'data/qos.csv'
+site_bandwidth_path = root_path + 'data/site_bandwidth.csv'
 
 '''
 读取文件
@@ -24,21 +32,46 @@ def parse_demand_head(head):
     head = head.strip()
     clients = head.split(',')
     clients.pop(0)
-    return clients
+    return len(clients), clients
 
 '''
 解析客户节点需求
 return type: dictionary
 return content: time: 当前时刻
-                demand: 客户节点需求列表，顺序与客户节点ID列表相同
+                demand: 客户节点需求列表,顺序与客户节点ID列表相同
 '''
-def parse_demand_body(body):
-    body = body.strip()
-    words = body.split(',')
+def parse_demand_line(line):
+    line = line.strip()
+    words = line.split(',')
     ans = {}
     ans['time'] = words[0]
-    ans['demand'] = words[1:]
+    ans['demand'] = []
+    for i in range(1, len(words)):
+        ans['demand'].append(int(words[i]))
     return ans
+
+'''
+解析客户节点需求
+return type: list, array
+return content: 时间戳列表
+                需求数组,时间戳*客户节点
+'''
+def parse_demand_body(body):
+    T = []
+    D = []
+    for i in range(0, len(body)):
+        ans = parse_demand_line(body[i])
+        T.append(ans['time'])
+        D.append(ans['demand'])
+    return T, np.array(D)
+
+'''
+解析客户节点需求
+'''
+def parse_demand(demands):
+    M, clients = parse_demand_head(demands[0])
+    T, D = parse_demand_body(demands[1:])
+    return M, clients, T, D
 
 # demands = read(demand_path)
 # print(parse_demand_head(demands[0]))
@@ -51,43 +84,43 @@ return content: QoS约束上限
 '''
 def parse_config(config):
     words = config[1].strip().split('=')
-    return words[1]
+    return int(words[1])
 
 # config = read(config_path)
 # print(parse_config(config))
 
 '''
 解析边缘节点带宽
-return type: dictionary
-return content: 字典每一项:key:边缘节点ID; value:该节点贷款上限
+return type: list, array
+return content: 边缘节点ID列表
+                边缘节点带宽数组
 '''
 def parse_site_bandwidth(lines):
-    site_bandwidths = {}
+    N = []
+    C = []
     for i in range(1, len(lines)):
         words = lines[i].strip().split(',')
-        site_bandwidths[words[0]] = words[1]
-    return site_bandwidths
+        N.append(words[0])
+        C.append(int(words[1]))
+    return N, np.array(C)
 
 # site_bandwidth = read(site_bandwidth_path)
 # print(parse_site_bandwidth(site_bandwidth))
 
 '''
 解析客户节点与边缘节点之间的网络时延
-return type: dictionary
-return content: key:客户节点ID, value:dictionary
-                            key:边缘节点ID, value:两者之间的网络时延
+return type: array
+return content: 边缘节点*客户节点 网络时延
 '''
 def parse_qos(lines):
-    clients = lines[0].strip().split(',')[1:]
-    qos = {}
-    for i in range(len(clients)):
-        qos[clients[i]] = {}
+    Y = []
     for i in range(1, len(lines)):
+        cur = []
         words = lines[i].strip().split(',')
-        site = words[0]
         for j in range(1, len(words)):
-            qos[clients[j - 1]][site] = words[j]
-    return qos
+            cur.append(int(words[j]))
+        Y.append(cur)
+    return np.array(Y)
     
 # qos = read(qos_path)
-# print(parse_qos(qos)['A'])
+# print(parse_qos(qos)['A']['A'])
