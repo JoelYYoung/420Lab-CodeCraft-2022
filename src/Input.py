@@ -1,18 +1,19 @@
 import numpy as np
+import random
 
 
 '''
 数据文件的根路径
 '''
-root_path = '../../'
+root_path = '/data/'
 
 '''
 数据文件路径
 '''
-demand_path = root_path + 'data/demand.csv'
-config_path = root_path + 'data/config.ini'
-qos_path = root_path + 'data/qos.csv'
-site_bandwidth_path = root_path + 'data/site_bandwidth.csv'
+demand_path = root_path + 'demand.csv'
+config_path = root_path + 'config.ini'
+qos_path = root_path + 'qos.csv'
+site_bandwidth_path = root_path + 'site_bandwidth.csv'
 
 '''
 读取文件
@@ -109,18 +110,21 @@ def parse_site_bandwidth(lines):
 
 '''
 解析客户节点与边缘节点之间的网络时延
-return type: array
-return content: 边缘节点*客户节点 网络时延
+return type: list(list)
+return content: 仅返回满足时延的节点
 '''
-def parse_qos(lines):
+def parse_qos(lines, Q, M):
     Y = []
+    for i in range(M):
+        Y.append([])
     for i in range(1, len(lines)):
-        cur = []
         words = lines[i].strip().split(',')
         for j in range(1, len(words)):
-            cur.append(int(words[j]))
-        Y.append(cur)
-    return np.array(Y)
+            if int(words[j]) < Q:
+                Y[j - 1].append(i - 1)
+            if i == len(lines) - 1:
+                random.shuffle(Y[j - 1])
+    return Y
     
 # qos = read(qos_path)
 # print(parse_qos(qos)['A']['A'])
